@@ -11,7 +11,7 @@
     --hp-dark: #1a1a2e; --hp-gray: #f4f5f7; --hp-border: #dfe1e6;
     --hp-text: #172b4d; --hp-text-light: #6b778c;
     --hp-red: #de350b; --hp-green: #00875a; --hp-yellow: #ff991f; --hp-teal: #00b8d9;
-    --sidebar-w: 300px; --radius: 8px;
+    --sidebar-w: 300px; --radius: 8ax;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--hp-gray); color: var(--hp-text); height: 100vh; overflow: hidden; }
@@ -152,6 +152,7 @@
       <button class="btn-tool" onclick="syncFromSheet()" title="Pull latest from Google Sheets">&#8635; Sync</button>
       <button class="btn-tool" onclick="pushAllToSheet()" title="Push all agents to Google Sheets">&#8593; Push All</button>
       <button class="btn-tool" onclick="exportAllDocx()" title="Export all as DOCX">&#128230; DOCX</button>
+      <button class="btn-tool" onclick="loadDefaultAgents()" title="Load 23 pre-defined SEO agents">&#128640; Defaults</button>
       <button class="btn-tool" onclick="showSetup()" title="Settings">&#9881;</button>
     </div>
     <div class="agent-list" id="agentList"></div>
@@ -191,6 +192,512 @@ const FIELD_META = {
   escalationPayload: { label: 'Payload to SEO Brain', section: 'Escalation to SEO Brain', type: 'array-input' },
   successMetric:     { label: 'How we know it is working', section: 'Success Metric', type: 'textarea', rows: 2 },
 };
+
+// ─── Default SEO Agents (all 23) ───
+const DEFAULT_SEO_AGENTS = [
+  // ── ORCHESTRATOR ──
+  {
+    group: "Orchestrator",
+    name: "SEO Brain",
+    domain: "Orchestration — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert (primary) · Performance Lead (oversight)",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Monitor all SEO signals continuously across monitoring, analysis, technical audit, and execution domains. Route detected opportunities and issues to the correct specialist agent, with no manual triage needed. Detect ranking drops, index coverage failures, and content gap opportunities across all markets in real time. Deliver one weekly prioritised action list to the SEO Expert, not 18 raw agent reports.",
+    triggerCondition: "Always-on. Receives outputs from all four synthesis agents continuously. Fires routing decisions when any synthesis agent reports an anomaly, opportunity, or completed analysis.",
+    frequency: "Continuous processing of synthesis agent outputs. Weekly consolidated action list delivered Monday 07:00 CET.",
+    maxTriggerWindow: "24/7 — orchestration never sleeps.",
+    localeScope: "Global. All 18 Helloprint markets aggregated. Locale-specific routing when issues are market-specific.",
+    inputs: "All four synthesis agent outputs (Monitoring, Analysis, Technical, Execution)\n\nSEO Brain historical decision log\n\nSEO Expert strategic priorities and guardrails\n\nHelloprint release calendar for conflict detection",
+    outputs: "Weekly prioritised action list to SEO Expert and Performance Lead\n\nReal-time routing decisions to specialist agents\n\nConflict detection alerts (e.g. content update and technical migration on same page)\n\nSequencing instructions to prevent agent collisions",
+    rules: [
+      "All synthesis agents report directly to the SEO Brain, never to each other — keeping orchestration in one place",
+      "Sequences work to prevent conflicting actions (e.g. a content update and a technical migration on the same page)",
+      "Ensures no agent acts on stale or conflicting signals",
+      "Delivers one weekly prioritised action list, not 18 raw agent reports",
+      "Trust level progression: L1 → L3 over time based on accuracy of routing decisions"
+    ],
+    escalationTrigger: "Conflicting signals from multiple synthesis agents on the same URL/market, or when confidence in routing decision is below threshold.",
+    escalationPayload: [
+      "Conflicting signals with source agents and confidence scores",
+      "Affected URLs, markets, and product categories",
+      "Recommended resolution with rationale",
+      "Historical context from previous similar conflicts"
+    ],
+    successMetric: "Routing accuracy ≥95%. Zero conflicting agent actions on same page. Weekly action list replaces manual SEO reporting entirely."
+  },
+  // ── MONITORING ──
+  {
+    group: "Monitoring",
+    name: "Monitoring Synthesis Agent",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Synthesise signals from all monitoring agents into a unified view of SEO health, flagging the most critical issues and routing them to the SEO Brain with appropriate severity and context.",
+    triggerCondition: "Triggered when any monitoring agent reports an anomaly or on scheduled synthesis cycles.",
+    frequency: "Every 6 hours (aligned with monitoring agent cycles) + event-driven on anomaly detection.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Global — aggregates across all 18 markets.",
+    inputs: "Outputs from all Monitoring domain agents (Traffic & Visibility Loss Monitor, Health & Index Monitor, Keyword & Topic Opportunity Monitor, Ranking & Traffic Opportunity Monitor, Content Intent Monitor)",
+    outputs: "Synthesised monitoring report to SEO Brain\n\nPrioritised anomaly list with severity, confidence, and recommended next agent\n\nMonitoring health dashboard update",
+    rules: ["Correlate signals across monitoring agents before escalating — avoid duplicate alerts for the same root cause", "Always include confidence score and recommended next action in escalation payload", "Read-only — never take corrective action, only report"],
+    escalationTrigger: "Any L2+ anomaly from monitoring agents, or correlated L1 anomalies across multiple agents.",
+    escalationPayload: ["Synthesised anomaly report with cross-agent correlation", "Severity classification and confidence score", "Recommended specialist agent to investigate"],
+    successMetric: "Signal-to-noise ratio: ≥80% of escalated issues are actionable. Zero missed L2+ anomalies."
+  },
+  {
+    group: "Monitoring",
+    name: "Traffic & Visibility Loss Monitor",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "Performance Lead (primary) · SEO Expert (secondary)",
+    trustLevel: "L2",
+    agentType: "N8N Flow",
+    intent: "Continuously watch organic traffic and SERP visibility across all Helloprint locales, detect statistically significant drops fast, and escalate the right context to the SEO Brain so downstream agents can investigate and act before revenue is lost.",
+    triggerCondition: "Scheduled + anomaly-driven. Fires on its schedule to recompute baselines; also fires immediately when a GA4 / GSC hourly pull shows a drop exceeding thresholds.",
+    frequency: "Base run: every 6 hours (04:00, 10:00, 16:00, 22:00 CET). Hourly delta check on cached GA4 + GSC data. Full weekly baseline recalculation Monday 03:00 CET.",
+    maxTriggerWindow: "Any time, 24/7. Must not be silenced during nights or weekends.",
+    localeScope: "Per-locale. Evaluated independently for each of the 18 Helloprint markets (NL, BE-NL, BE-FR, FR, DE, AT, ES, IT, UK, IE, SE, DK, NO, FI, PL, CZ, PT, INT/EN).",
+    inputs: "GA4 → sessions, users, pageviews by channelGrouping='Organic Search', segmented by country & landing page group (hourly + daily)\n\nGoogle Search Console (via BigQuery export) → impressions, clicks, average position, CTR, by query, page, country, device (daily)\n\nAhrefs MCP → organic keywords count, traffic estimate, domain rating, top-20 keyword movement (daily)\n\nInternal BigQuery seo_baselines.traffic_daily_v2 → rolling 28-day medians per locale & landing-page cluster\n\nContentful → page → landing-page-cluster mapping\n\nHelloprint release calendar → deploys, price changes, canonical / robots edits",
+    outputs: "Hermes event seo.traffic.anomaly.detected with locale, cluster, magnitude, confidence, suspected driver\n\nSlack alert to #seo-monitoring (L1) or #seo-brain (L2/L3)\n\nRow in BigQuery seo_monitoring.anomalies\n\nDaily digest DM at 08:30 CET to Performance Lead\n\nDashboard tile on Hermes SEO dashboard (green/amber/red per locale)",
+    rules: [
+      "Traffic drop thresholds (vs. baseline, per locale per cluster): ≥10% = L1 (log + Slack); ≥20% = L2 (alert + Hermes event); ≥35% or two consecutive days ≥20% = L3 (page Performance Lead + escalate immediately)",
+      "Visibility drop thresholds: loss of ≥15% of ranked top-20 keywords OR average position drop ≥3 over 48h → L2 regardless of session data",
+      "Comparison period: same day-of-week over trailing 28 days, holidays removed. Weekly views: trailing 13 weeks, same ISO week",
+      "Seasonality guardrail: drops inside known seasonal dip downgraded one level unless exceeding 1.5× historical seasonal drop",
+      "Data-quality check: if GA4/GSC lag >6h or row count <60% of 7-day median, emit data_quality.warning and suppress drop alerts",
+      "Release-window suppression: if deploy touched affected cluster in last 24h, annotate alert and wait one cycle before L3",
+      "Paid/organic collision: if paid search spiked ≥30% cost in same window, flag cannibalisation but don't attribute to SEO",
+      "Rate limits: max 3 alerts per locale per 24h — additional events folded into running incident",
+      "Forbidden actions: never edit pages, robots, sitemaps, canonicals, hreflang, or Contentful entries. Read-only by design",
+      "Human override: Performance Lead can mute a locale for up to 7 days via Slack slash-command"
+    ],
+    escalationTrigger: "Any L2 or L3 event, OR two L1 events on same locale+cluster within 72h, OR any visibility-loss trigger.",
+    escalationPayload: ["Locale + landing-page cluster + affected product lines", "Magnitude (% drop) vs. baseline, confidence score (0–1)", "Window observed (start, end, data freshness timestamps)", "Top 10 affected URLs with before/after sessions, impressions, avg position", "Candidate drivers ruled in/out: deploys, seasonality, paid-search shift, data-quality, Ahrefs movement", "Suggested next agent to wake up with one-line rationale"],
+    successMetric: "≥90% recall on true traffic drops vs. human post-mortem; median time-to-detect <60 min for L2+ events; false-positive rate <10% of L2+ alerts (measured weekly)."
+  },
+  {
+    group: "Monitoring",
+    name: "Health & Index Monitor",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Continuously monitor indexation health, crawl status, and site availability across all Helloprint markets to detect deindexation, crawl errors, and coverage issues before they impact rankings.",
+    triggerCondition: "Scheduled crawl checks + event-driven on GSC coverage report changes.",
+    frequency: "Every 6 hours for index coverage checks. Daily full crawl health report at 05:00 CET.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Per-locale across all 18 Helloprint markets.",
+    inputs: "Google Search Console → index coverage report, crawl stats\n\nSite Crawl API → crawl error logs, response codes, redirect chains\n\nBigQuery → historical index coverage baselines\n\nContentful → page inventory for coverage comparison",
+    outputs: "Index health status per locale (indexed, excluded, error counts)\n\nCrawl error alerts for new 4xx/5xx patterns\n\nDeindexation alerts when indexed page count drops significantly\n\nDaily health summary to Monitoring Synthesis Agent",
+    rules: ["Alert when indexed page count drops >5% in any locale within 24h", "Track noindex/canonical changes that could cause unintended deindexation", "Cross-reference crawl errors with traffic drops from Traffic & Visibility Monitor", "Never modify robots.txt, sitemaps, or meta tags — read-only monitoring"],
+    escalationTrigger: "Indexed page count drop >10% in any locale, or >50 new 5xx errors in 24h, or sitemap coverage drop >15%.",
+    escalationPayload: ["Affected locale and URL patterns", "Index coverage delta with before/after counts", "Crawl error breakdown by type", "Correlation with recent deploys or config changes"],
+    successMetric: "Detect deindexation events within 6 hours. Zero false negatives on 5xx error spikes. Coverage tracking accuracy ≥98%."
+  },
+  {
+    group: "Monitoring",
+    name: "Keyword & Topic Opportunity Monitor",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Continuously scan for new keyword opportunities and emerging search topics relevant to Helloprint's product categories, identifying gaps before competitors fill them.",
+    triggerCondition: "Scheduled keyword landscape scans + triggered by new product category additions in Contentful.",
+    frequency: "Daily keyword opportunity scan at 06:00 CET. Weekly deep topic analysis Monday 04:00 CET.",
+    maxTriggerWindow: "Business hours preferred (06:00–22:00 CET) to manage API rate limits.",
+    localeScope: "Per-locale across all 18 markets. Priority markets (NL, DE, FR, UK, ES, IT) scanned daily; others weekly.",
+    inputs: "Ahrefs MCP → keyword explorer, content gap analysis, search suggestions\n\nGoogle Search Console → query performance, emerging queries\n\nContentful → current page inventory and keyword mapping\n\nBigQuery → historical keyword tracking data",
+    outputs: "New keyword opportunity list with volume, difficulty, and intent classification\n\nContent gap report: queries with impressions but no dedicated landing page\n\nTrending topic alerts for print-related search spikes\n\nWeekly opportunity summary to Monitoring Synthesis Agent",
+    rules: ["Only surface keywords with commercial intent relevant to Helloprint's product range", "Filter out branded competitor terms and irrelevant long-tail", "Cross-reference with existing content to avoid duplicate targeting", "Minimum volume threshold: 50/month for priority markets, 20/month for others", "Rate limit Ahrefs API calls to stay within plan limits"],
+    escalationTrigger: "High-volume keyword opportunity (>1000 monthly searches) with no existing page coverage, or competitor capturing a keyword Helloprint previously ranked for.",
+    escalationPayload: ["Keyword list with volume, KD, current ranking (if any)", "Competitor URLs currently ranking", "Suggested target page (existing or new)", "Estimated traffic potential"],
+    successMetric: "Identify ≥80% of viable keyword opportunities before competitors. Content gap report accuracy ≥90%. Zero missed high-volume opportunities (>500 monthly) in priority markets."
+  },
+  {
+    group: "Monitoring",
+    name: "Ranking & Traffic Opportunity Monitor",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Monitor ranking positions for tracked keywords across all markets and identify quick-win opportunities where small improvements could yield significant traffic gains.",
+    triggerCondition: "Scheduled position tracking + event-driven on significant ranking changes.",
+    frequency: "Daily position check at 07:00 CET. Hourly checks for top-priority keywords.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Per-locale across all 18 markets.",
+    inputs: "Ahrefs MCP → rank tracking, position history, SERP features\n\nGoogle Search Console → position data, CTR by position\n\nBigQuery → historical ranking baselines and traffic correlation",
+    outputs: "Daily ranking movement report per locale\n\nQuick-win opportunity list: keywords ranking 4-20 with high volume\n\nSERP feature opportunity alerts (featured snippets, PAA)\n\nRanking drop alerts with severity classification",
+    rules: ["Quick-win definition: ranking positions 4-20 with monthly volume >100 and KD <50", "Track SERP feature changes independently from organic position", "Correlate ranking changes with known algorithm updates", "Never report ranking fluctuations of ±1 position as anomalies — normal volatility"],
+    escalationTrigger: "Top-3 keyword drops out of top 10, or ≥5 tracked keywords drop simultaneously in one locale.",
+    escalationPayload: ["Affected keywords with before/after positions", "Traffic impact estimate", "SERP analysis: new competitors, SERP feature changes", "Suggested investigation direction"],
+    successMetric: "Quick-win identification accuracy ≥85%. Ranking drop detection within 24h. Traffic opportunity estimates within ±20% of actual."
+  },
+  {
+    group: "Monitoring",
+    name: "Content Intent Monitor",
+    domain: "Monitoring — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Monitor search intent alignment between Helloprint's pages and the evolving SERP landscape, detecting when Google's understanding of user intent shifts and existing content no longer matches.",
+    triggerCondition: "Scheduled SERP analysis + triggered by significant CTR changes in GSC data.",
+    frequency: "Weekly SERP intent analysis. Daily CTR anomaly checks.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Priority markets first (NL, DE, FR, UK, ES, IT). Other markets monthly.",
+    inputs: "Google Search Console → CTR by query and page, position vs CTR curves\n\nAhrefs MCP → SERP overview, SERP feature distribution\n\nContentful → current page content type and intent classification\n\nBigQuery → historical CTR baselines per position",
+    outputs: "Intent mismatch alerts: pages ranking but with declining CTR suggesting intent shift\n\nSERP landscape change reports per category\n\nContent type recommendations (transactional vs informational)\n\nWeekly intent alignment summary to Monitoring Synthesis Agent",
+    rules: ["CTR anomaly = CTR drop >30% at same position over 28-day rolling window", "Cross-reference with SERP feature changes before attributing to intent shift", "Consider seasonal patterns before flagging intent changes", "Never recommend content changes — only flag misalignment for analysis agents"],
+    escalationTrigger: "Intent mismatch detected on high-traffic page (>500 sessions/week) or systematic intent shift across a product category.",
+    escalationPayload: ["Affected pages and queries", "CTR trend with position context", "Current vs expected SERP composition", "Recommended analysis: content gap or technical investigation"],
+    successMetric: "Intent shift detection ≥14 days before traffic impact. False positive rate <15%. Category-level intent tracking covers all priority markets."
+  },
+  // ── SEO ANALYSIS ──
+  {
+    group: "SEO Analysis",
+    name: "SEO Analysis Synthesis Agent",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Synthesise findings from all SEO analysis agents into prioritised, actionable recommendations for the SEO Brain, connecting keyword opportunities, content gaps, competitor moves, and link prospects into a coherent strategic picture.",
+    triggerCondition: "Triggered when any analysis agent completes a report or on scheduled synthesis cycles.",
+    frequency: "Daily synthesis at 09:00 CET. Event-driven on high-priority analysis completions.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Global — synthesises across all markets.",
+    inputs: "Outputs from all Analysis domain agents (Traffic & Performance, LLM Visibility, Keyword & Content Gap, Deep Research Competitor, Link Opportunity, Structured Data)",
+    outputs: "Prioritised analysis report to SEO Brain\n\nCross-agent correlation findings\n\nStrategic opportunity ranking by estimated impact\n\nWeekly analysis digest",
+    rules: ["Prioritise by estimated traffic/revenue impact, not by agent source", "Correlate findings across agents to build complete picture", "Never recommend actions — provide analysis and options for the SEO Brain to route"],
+    escalationTrigger: "High-impact opportunity identified (>1000 monthly sessions potential) or competitor threat requiring immediate response.",
+    escalationPayload: ["Synthesised analysis with cross-agent correlations", "Impact estimate with confidence level", "Recommended specialist agents for execution"],
+    successMetric: "Analysis-to-action conversion rate ≥70%. Strategic recommendations adopted by SEO Expert ≥60% of the time."
+  },
+  {
+    group: "SEO Analysis",
+    name: "Traffic & Performance Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Analyse organic traffic patterns, segment performance by product category and market, and identify root causes of traffic changes to provide actionable insights for content and technical optimisation.",
+    triggerCondition: "Triggered by Monitoring Synthesis Agent when traffic anomalies need investigation, or on scheduled deep-dive cycles.",
+    frequency: "Weekly deep analysis. On-demand when triggered by monitoring alerts.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Per-locale with cross-market comparison capability.",
+    inputs: "GA4 → organic traffic segmented by landing page, category, device, country\n\nGoogle Search Console → query-level performance data\n\nAhrefs MCP → organic keyword data and traffic estimates\n\nBigQuery → historical performance baselines",
+    outputs: "Traffic analysis report with root cause identification\n\nCategory-level performance breakdown\n\nRecommendations for content and technical teams\n\nPerformance trend alerts to Analysis Synthesis Agent",
+    rules: ["Always segment analysis by locale and product category", "Distinguish between traffic-driven and conversion-driven changes", "Account for seasonality and business calendar events", "Provide confidence level for root cause attribution"],
+    escalationTrigger: "Unexplained traffic decline >15% at category level persisting >7 days.",
+    escalationPayload: ["Category and locale affected", "Traffic trend with segmentation", "Root causes investigated and ruled out", "Recommended investigation paths"],
+    successMetric: "Root cause identification accuracy ≥80%. Analysis turnaround <4 hours for monitoring-triggered requests."
+  },
+  {
+    group: "SEO Analysis",
+    name: "LLM Visibility Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Track and analyse Helloprint's visibility in AI-generated search results and LLM responses, identifying where Helloprint surfaces (or doesn't) in AI-native search experiences like Google AI Overviews, ChatGPT, and Perplexity.",
+    triggerCondition: "Scheduled visibility scans + triggered by new GEO strategy updates from SEO Expert.",
+    frequency: "Weekly LLM visibility scan. Monthly comprehensive GEO report.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Priority markets: EN (UK/US), NL, DE, FR. Expanding as LLM search matures per market.",
+    inputs: "LLM visibility tracking tools → brand mention frequency, citation tracking\n\nStructured data from Contentful → schema markup coverage\n\nAhrefs MCP → AI Overview presence in SERPs\n\nCompetitor LLM visibility benchmarks",
+    outputs: "LLM visibility report: where Helloprint appears vs competitors in AI responses\n\nStructured data gap analysis for GEO optimisation\n\nContent recommendations for improved LLM citability\n\nMonthly GEO strategy report to Analysis Synthesis Agent",
+    rules: ["Track AI Overview appearances separately from organic rankings", "Monitor competitor LLM visibility for benchmark comparison", "Focus on high-commercial-intent queries where LLM responses include product recommendations", "Never attempt to manipulate LLM outputs — optimise for legitimate citability"],
+    escalationTrigger: "Competitor consistently appearing in LLM responses for Helloprint's core product categories while Helloprint is absent.",
+    escalationPayload: ["Query categories where visibility is lacking", "Competitor citations and content analysis", "Structured data and content gaps identified", "Recommended GEO improvements"],
+    successMetric: "Track LLM visibility across ≥100 core commercial queries. Visibility improvement trend quarter-over-quarter. GEO recommendations implemented within 30 days."
+  },
+  {
+    group: "SEO Analysis",
+    name: "Keyword & Content Gap Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Identify content gaps where Helloprint lacks adequate pages for valuable search queries, and analyse keyword opportunities to prioritise new content creation and existing content optimisation.",
+    triggerCondition: "Triggered by Keyword & Topic Opportunity Monitor findings, or on scheduled analysis cycles.",
+    frequency: "Weekly content gap analysis. On-demand for specific category deep dives.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Per-locale analysis with cross-market gap identification.",
+    inputs: "Ahrefs MCP → keyword data, content gap analysis, competitor keyword overlap\n\nGoogle Search Console → query data with no matching landing page\n\nContentful → current content inventory and keyword mapping\n\nBigQuery → historical keyword performance",
+    outputs: "Content gap report: queries with demand but no Helloprint page\n\nKeyword prioritisation matrix (volume × difficulty × commercial intent)\n\nContent brief recommendations for new pages\n\nExisting content optimisation opportunities",
+    rules: ["Prioritise gaps by commercial intent and revenue potential, not just volume", "Consider content creation cost vs expected return", "Cross-reference with product catalog to ensure products exist for target keywords", "Account for cannibalisation risk when recommending new content"],
+    escalationTrigger: "Content gap identified with >5000 combined monthly volume across markets and no competitive barrier.",
+    escalationPayload: ["Gap analysis with keyword list and volumes", "Competitor content analysis", "Recommended content format and target pages", "Estimated traffic and revenue impact"],
+    successMetric: "Content gaps identified lead to published pages within 30 days. New content captures >50% of estimated traffic within 90 days."
+  },
+  {
+    group: "SEO Analysis",
+    name: "Deep Research Competitor Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Conduct deep competitive analysis of SEO strategies used by Helloprint's top competitors across all markets, identifying tactical and strategic moves that impact Helloprint's organic visibility.",
+    triggerCondition: "Scheduled competitor monitoring + event-driven when competitor ranking gains are detected.",
+    frequency: "Weekly competitor scan. Monthly deep-dive per priority market. Quarterly full competitor landscape review.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Per-locale. Top 5 competitors per market tracked continuously.",
+    inputs: "Ahrefs MCP → competitor organic keywords, backlink profiles, content changes\n\nSite Crawl API → competitor site structure analysis\n\nGoogle Search Console (Helloprint) → SERP overlap with competitors\n\nBigQuery → historical competitor benchmarks",
+    outputs: "Competitor movement alerts: new pages, ranking gains, backlink spikes\n\nStrategic competitor analysis: content strategy, technical approach, link strategy\n\nOpportunity identification: where competitors rank and Helloprint doesn't\n\nQuarterly competitive landscape report",
+    rules: ["Focus on actionable competitor insights, not vanity comparisons", "Track content publication velocity and quality, not just rankings", "Identify competitor link-building patterns for strategic response", "Never recommend copying competitor content — identify strategic gaps to fill differently"],
+    escalationTrigger: "Competitor launches significant new content strategy targeting Helloprint's core categories, or gains >20 new ranking positions in priority market.",
+    escalationPayload: ["Competitor action summary", "Impact on Helloprint's rankings and traffic", "Strategic response recommendations", "Timeline urgency assessment"],
+    successMetric: "Competitor moves detected within 48h. Strategic recommendations acted on ≥50% of the time. Competitive position maintained or improved in priority markets."
+  },
+  {
+    group: "SEO Analysis",
+    name: "Link Opportunity Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Identify and evaluate external and internal link-building opportunities across all markets, providing prioritised prospects for the SEO execution team to act on.",
+    triggerCondition: "Scheduled link landscape scan + triggered by competitor backlink alerts.",
+    frequency: "Weekly link opportunity scan. Monthly internal linking analysis.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Per-locale with global link strategy coordination.",
+    inputs: "Ahrefs MCP → backlink data, referring domains, competitor link profiles, link intersect\n\nSite Crawl API → internal link structure and equity flow\n\nContentful → page authority and content relationships\n\nBigQuery → historical link acquisition data",
+    outputs: "External link prospect list with quality scores and outreach priority\n\nInternal linking opportunities and equity flow optimisation\n\nBroken link reclamation opportunities\n\nCompetitor link gap analysis",
+    rules: ["Quality over quantity: only surface link prospects with DR >30 and topical relevance", "Exclude PBNs, link farms, and spammy domains from prospect lists", "Prioritise link opportunities by page authority potential and commercial impact", "Internal linking recommendations must consider user experience, not just SEO equity"],
+    escalationTrigger: "High-authority link opportunity requiring swift outreach (time-sensitive), or significant loss of referring domains.",
+    escalationPayload: ["Link opportunity details with quality assessment", "Competitive context", "Recommended outreach approach", "Urgency level and timeline"],
+    successMetric: "Link prospect quality score accuracy ≥85%. Internal link recommendations improve page authority for target pages. Link acquisition rate from prospects ≥15%."
+  },
+  {
+    group: "SEO Analysis",
+    name: "Structured Data Analyst",
+    domain: "SEO Analysis — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Analyse structured data implementation across all Helloprint pages, identify schema markup gaps and errors, and recommend improvements to maximise rich result eligibility and LLM readability.",
+    triggerCondition: "Scheduled schema audit + event-driven on new page types or GSC rich result changes.",
+    frequency: "Weekly schema validation scan. Monthly comprehensive structured data audit.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Global — all Helloprint domains and page types.",
+    inputs: "Site Crawl API → schema markup extraction and validation\n\nGoogle Search Console → rich result performance, schema errors\n\nContentful → content model to schema mapping\n\nGoogle Rich Results Test API → validation results",
+    outputs: "Schema error report with fix recommendations\n\nRich result eligibility gap analysis\n\nSchema markup recommendations for new page types\n\nStructured data coverage report per locale",
+    rules: ["Follow Google's structured data guidelines strictly — no spammy markup", "Prioritise Product, FAQ, Breadcrumb, and Organization schemas for Helloprint", "Validate all schema recommendations against Google's Rich Results Test", "Consider LLM readability when recommending schema improvements"],
+    escalationTrigger: "Schema errors affecting >100 pages or rich result loss for high-traffic page category.",
+    escalationPayload: ["Schema errors by type and page count", "Rich result impact (before/after)", "Fix recommendations with implementation guidance", "Priority ranking by traffic impact"],
+    successMetric: "Schema validation error rate <1% of pages. Rich result coverage ≥90% for eligible page types. Zero Google Search Console schema errors."
+  },
+  // ── TECHNICAL AUDIT ──
+  {
+    group: "Technical Audit",
+    name: "Technical Synthesis Agent",
+    domain: "Technical Audit — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Synthesise findings from all technical audit agents into a unified technical health picture, prioritising fixes by SEO impact and routing actionable items to the SEO Brain.",
+    triggerCondition: "Triggered when any technical agent completes an audit or on scheduled synthesis cycles.",
+    frequency: "Daily synthesis at 08:00 CET. Event-driven on critical technical issues.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Global — all Helloprint domains.",
+    inputs: "Outputs from all Technical Audit agents (Page Speed & Web Vitals, Crawling & Rendering, Site Architecture, Core Web Vitals Tracker)",
+    outputs: "Prioritised technical fix list to SEO Brain\n\nTechnical health score per locale\n\nCritical issue alerts requiring immediate attention\n\nWeekly technical health summary",
+    rules: ["Prioritise by SEO impact: indexation-blocking issues first, then speed, then best practices", "Correlate technical issues with traffic impact data from monitoring agents", "Never implement fixes — only report and recommend"],
+    escalationTrigger: "Critical technical issue affecting indexation or rendering for >1% of pages, or CWV regression across a locale.",
+    escalationPayload: ["Technical issue summary with severity", "Affected page count and traffic exposure", "Recommended fix with implementation complexity", "Correlation with recent deploys if applicable"],
+    successMetric: "Technical issues detected before ranking impact ≥80%. Fix recommendations accepted and implemented ≥70%."
+  },
+  {
+    group: "Technical Audit",
+    name: "Page Speed & Web Vitals Analyst",
+    domain: "Technical Audit — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Monitor page speed and Core Web Vitals across all Helloprint page types and markets, detecting performance regressions and identifying optimisation opportunities.",
+    triggerCondition: "Scheduled performance checks + event-driven on deploy notifications.",
+    frequency: "Daily speed checks for top 100 pages per locale. Weekly full audit. Post-deploy checks within 1 hour.",
+    maxTriggerWindow: "24/7",
+    localeScope: "All 18 markets. Page-type sampling across product, category, landing, and blog pages.",
+    inputs: "Site Crawl API → page speed metrics, resource loading analysis\n\nGoogle Search Console → Core Web Vitals report\n\nCrUX data → real-user performance metrics\n\nBigQuery → historical performance baselines",
+    outputs: "Speed regression alerts per page type\n\nCore Web Vitals status report (Good/Needs Improvement/Poor)\n\nOptimisation recommendations with estimated impact\n\nPost-deploy performance validation reports",
+    rules: ["CWV thresholds follow Google's standards: LCP <2.5s, FID <100ms, CLS <0.1", "Distinguish between lab data and field data regressions", "Account for geographic variation in performance (CDN, server location)", "Never recommend changes that break functionality for speed — flag trade-offs"],
+    escalationTrigger: "CWV status changes from 'Good' to 'Poor' for any major page type, or LCP regression >1s post-deploy.",
+    escalationPayload: ["Affected page types and URLs", "Performance metrics with before/after comparison", "Root cause analysis (resources, scripts, server)", "Recommended fixes with complexity estimate"],
+    successMetric: "Performance regressions detected within 2 hours of deploy. CWV 'Good' status maintained for ≥90% of page types. Post-deploy checks complete within 1 hour."
+  },
+  {
+    group: "Technical Audit",
+    name: "Crawling & Rendering Analyst",
+    domain: "Technical Audit — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Monitor how search engines crawl and render Helloprint pages, detecting crawl budget waste, rendering issues, and JavaScript-dependent content that may not be indexed properly.",
+    triggerCondition: "Scheduled crawl analysis + event-driven on GSC crawl stats changes.",
+    frequency: "Daily crawl log analysis. Weekly rendering audit. Monthly full crawl budget analysis.",
+    maxTriggerWindow: "24/7",
+    localeScope: "All Helloprint domains globally.",
+    inputs: "Site Crawl API → crawl logs, response codes, redirect chains, rendering output\n\nGoogle Search Console → crawl stats, crawl budget data\n\nServer logs → Googlebot crawl patterns\n\nContentful → JavaScript-rendered content mapping",
+    outputs: "Crawl budget waste report: blocked resources, redirect chains, soft 404s\n\nRendering issue alerts: JavaScript content not visible to crawlers\n\nCrawl pattern anomaly detection\n\nDaily crawl health summary to Technical Synthesis Agent",
+    rules: ["Monitor Googlebot crawl frequency and flag significant changes (±20%)", "Detect redirect chains >2 hops and recommend consolidation", "Identify crawl budget waste from parameter URLs, faceted navigation, etc.", "Never modify robots.txt or server configuration — report findings only"],
+    escalationTrigger: "Googlebot crawl rate drops >30%, or rendering failures affect >5% of indexed pages.",
+    escalationPayload: ["Crawl anomaly description with timeline", "Affected URL patterns", "Server response analysis", "Recommended investigation or fix"],
+    successMetric: "Crawl waste identified and flagged <24h. Rendering issues detected before indexation impact. Crawl budget utilisation efficiency tracked monthly."
+  },
+  {
+    group: "Technical Audit",
+    name: "Site Architecture Monitor",
+    domain: "Technical Audit — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Monitor Helloprint's site architecture for SEO health — internal link structure, URL hierarchy, navigation depth, and orphan pages — ensuring all important pages are properly connected and crawlable.",
+    triggerCondition: "Scheduled architecture audits + event-driven when new pages/categories are added in Contentful.",
+    frequency: "Weekly architecture scan. Monthly deep structure analysis.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "All Helloprint domains with per-locale analysis.",
+    inputs: "Site Crawl API → internal link graph, URL structure, click depth\n\nContentful → page hierarchy and category structure\n\nBigQuery → page performance correlated with architecture position\n\nAhrefs MCP → internal link distribution",
+    outputs: "Orphan page alerts: pages not linked from navigation\n\nClick depth report: pages requiring >3 clicks from homepage\n\nInternal link equity flow analysis\n\nArchitecture change impact assessment for new categories",
+    rules: ["Critical pages should be within 3 clicks of homepage", "Flag orphan pages with historical traffic — these are likely unintentional", "Monitor hreflang implementation for cross-locale linking", "Architecture recommendations must consider UX navigation, not just SEO"],
+    escalationTrigger: "Orphan pages with >100 weekly sessions detected, or architecture change affecting >5% of internal link graph.",
+    escalationPayload: ["Orphan page list with traffic data", "Architecture change delta", "Internal link equity impact", "Recommended structural fixes"],
+    successMetric: "Orphan page count <1% of total indexed pages. All product pages within 3 clicks of homepage. Architecture issues flagged before ranking impact."
+  },
+  {
+    group: "Technical Audit",
+    name: "Core Web Vitals Tracker",
+    domain: "Technical Audit — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "N8N Flow",
+    intent: "Track Core Web Vitals trends over time across all Helloprint page types and markets using field data, providing early warning of CWV status changes that could affect search rankings.",
+    triggerCondition: "Scheduled CWV data collection + event-driven on CrUX data updates.",
+    frequency: "Daily CWV snapshot. Weekly trend analysis. Monthly status report.",
+    maxTriggerWindow: "24/7",
+    localeScope: "All 18 markets with per-page-type tracking.",
+    inputs: "CrUX API → field-level CWV data (LCP, FID/INP, CLS)\n\nGoogle Search Console → CWV report\n\nBigQuery → historical CWV trends\n\nPage Speed Insights API → origin-level and URL-level data",
+    outputs: "CWV trend dashboard data per locale and page type\n\nStatus change alerts (Good → Needs Improvement → Poor)\n\nCWV forecast: predicted status changes based on trends\n\nMonthly CWV health report to Technical Synthesis Agent",
+    rules: ["Use field data (CrUX) as primary signal, lab data as diagnostic", "Track INP (Interaction to Next Paint) as the primary responsiveness metric", "Alert 2 weeks before predicted CWV status downgrade based on trend analysis", "Segment by page type: product, category, blog, landing — each tracked independently"],
+    escalationTrigger: "CWV status downgrade for any major page type, or predicted downgrade within 14 days based on trend.",
+    escalationPayload: ["CWV metrics with trend data", "Affected page type and market", "Predicted status change timeline", "Contributing factors identified"],
+    successMetric: "CWV status downgrades predicted ≥14 days in advance. All markets maintain 'Good' CWV status for ≥90% of page types."
+  },
+  // ── SEO EXECUTION ──
+  {
+    group: "SEO Execution",
+    name: "Execution Synthesis Agent",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Coordinate and synthesise outputs from all SEO execution agents, ensuring content briefs, published content, error fixes, and link changes are sequenced properly and don't conflict with each other or with technical audit findings.",
+    triggerCondition: "Triggered when any execution agent completes a task or when SEO Brain sends new execution instructions.",
+    frequency: "Continuous — processes execution outputs as they arrive. Daily summary at 18:00 CET.",
+    maxTriggerWindow: "24/7",
+    localeScope: "Global — coordinates execution across all markets.",
+    inputs: "Outputs from all Execution domain agents (Content Briefer, Context Executor, Error Fixer, Content Quality Scorer, Internal & External Linkbuilder)\n\nSEO Brain routing instructions\n\nTechnical Audit findings to avoid conflicts",
+    outputs: "Execution status dashboard\n\nConflict detection between concurrent execution tasks\n\nDaily execution summary to SEO Brain\n\nQuality gate results for published content",
+    rules: ["Never allow content update and technical migration on same page simultaneously", "Enforce quality gates: Content Quality Scorer must approve before publishing", "Sequence execution tasks by priority from SEO Brain", "Track all execution outcomes for the data flywheel"],
+    escalationTrigger: "Execution conflict detected, quality gate failure on priority content, or execution queue blocked by dependency.",
+    escalationPayload: ["Conflict or failure description", "Affected pages and execution tasks", "Recommended resolution", "Impact on execution timeline"],
+    successMetric: "Zero execution conflicts. Quality gate pass rate ≥90%. Execution turnaround within SLA for all priority levels."
+  },
+  {
+    group: "SEO Execution",
+    name: "Content Briefer",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Generate comprehensive, data-driven content briefs for new and existing pages based on keyword analysis, competitor content, and SEO best practices — ready for the Content Executor to produce.",
+    triggerCondition: "Triggered by SEO Brain when content creation/optimisation is prioritised, or by Analysis Synthesis Agent with content gap findings.",
+    frequency: "On-demand based on SEO Brain instructions. Batch processing for large content programs.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Per-locale. Briefs are locale-specific with market context.",
+    inputs: "Keyword & Content Gap Analyst findings\n\nAhrefs MCP → competitor content analysis, keyword data\n\nContentful → existing content and product feed\n\nBrand guidelines and tone of voice documentation\n\nSEO Expert strategic direction and guardrails",
+    outputs: "Content brief document with: target keywords, search intent, recommended structure, competitor benchmarks, word count guidance, internal linking targets\n\nBrief approval status tracking\n\nBatch content calendar recommendations",
+    rules: ["Every brief must include primary + secondary keywords with volume data", "Include top 3 competitor content analysis for the target query", "Align with Helloprint brand voice guidelines", "Include specific Contentful content model field mapping", "Briefs require SEO Expert or Performance Lead approval before execution (L1-L2)"],
+    escalationTrigger: "Brief requires content type not in existing Contentful model, or strategic direction unclear for the target category.",
+    escalationPayload: ["Brief draft with blocking issue highlighted", "Content model gap description", "Strategic question requiring human judgment", "Suggested resolution options"],
+    successMetric: "Briefs produced within 2 hours of request. Brief-to-published content time <5 business days. Published content from briefs achieves target rankings within 90 days ≥60% of the time."
+  },
+  {
+    group: "SEO Execution",
+    name: "Context Executor (Native)",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Hybrid",
+    intent: "Generate and publish optimised content directly to Contentful based on approved content briefs, producing product descriptions, category pages, FAQs, landing pages, and blog posts at scale across all locales.",
+    triggerCondition: "Triggered by approved content briefs from Content Briefer or by SEO Brain for bulk content updates.",
+    frequency: "On-demand based on brief approval queue. Batch processing for large-scale content generation.",
+    maxTriggerWindow: "24/7 for content generation. Publishing during business hours only (L1-L2).",
+    localeScope: "Per-locale content generation with native language quality.",
+    inputs: "Approved content briefs from Content Briefer\n\nContentful → content models, existing content, product feed\n\nBrand voice guidelines and tone documentation\n\nLocale-specific style guides\n\nSEO Expert guardrails for content standards",
+    outputs: "Generated content published to Contentful (as draft in L1, direct publish in L3)\n\nContent generation log with quality scores\n\nLocale adaptation reports\n\nBulk content status dashboard",
+    rules: ["All content must pass Content Quality Scorer before publishing (L1-L2)", "Follow Contentful content model field mapping exactly", "Maintain brand voice consistency across all locales", "Never publish without approved brief (L1-L2)", "Include proper internal linking as specified in brief", "Product descriptions must use enriched product feed as source of truth"],
+    escalationTrigger: "Content generation failure for a priority page, or quality score below threshold on published content.",
+    escalationPayload: ["Failed content with error description", "Quality score breakdown", "Brief requirements vs actual output comparison", "Suggested remediation"],
+    successMetric: "Content quality score ≥85% on first generation. Publishing rate: 50+ pages/week at L3. Brand voice compliance ≥95%."
+  },
+  {
+    group: "SEO Execution",
+    name: "Error Fixer",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Automatically fix SEO errors detected by technical audit agents — including meta tag issues, schema errors, redirect problems, and content-level SEO issues — within approved guardrails.",
+    triggerCondition: "Triggered by Technical Synthesis Agent with fix-ready issues, or by SEO Brain for prioritised error batches.",
+    frequency: "On-demand based on error queue. Daily error sweep at 06:00 CET.",
+    maxTriggerWindow: "24/7 for error detection. Fixes applied during business hours (L1-L2).",
+    localeScope: "All Helloprint domains globally.",
+    inputs: "Technical Synthesis Agent error reports\n\nContentful → page content requiring fixes\n\nSite Crawl API → validation of fixes post-deployment\n\nSEO Expert approved fix patterns and guardrails",
+    outputs: "Fixed errors log with before/after validation\n\nFix failure reports for manual intervention\n\nError trend analysis (recurring vs one-time)\n\nDaily fix summary to Execution Synthesis Agent",
+    rules: ["Only fix errors with approved fix patterns — no creative problem-solving without approval", "Validate every fix post-deployment via crawl check", "Never modify critical elements (canonicals, hreflang, robots) without explicit approval", "Batch similar fixes for efficiency but validate each individually", "Roll back immediately if validation fails"],
+    escalationTrigger: "Error requires fix pattern not in approved list, or fix validation fails and rollback is needed.",
+    escalationPayload: ["Error description and affected pages", "Attempted fix and validation failure", "Rollback status", "Recommended new fix pattern for approval"],
+    successMetric: "Fix success rate ≥95%. Post-fix validation pass rate ≥99%. Error recurrence rate <5%."
+  },
+  {
+    group: "SEO Execution",
+    name: "Content Quality Scorer",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Score and validate all content before publishing, ensuring it meets SEO best practices, brand voice standards, and quality thresholds — acting as the automated quality gate for the content pipeline.",
+    triggerCondition: "Triggered when Content Executor produces content for review, or for periodic quality audits of published content.",
+    frequency: "On-demand for new content. Weekly quality audit of recently published content.",
+    maxTriggerWindow: "24/7",
+    localeScope: "All locales. Quality criteria adapted per market.",
+    inputs: "Content from Context Executor awaiting review\n\nContent brief requirements for comparison\n\nBrand voice guidelines and quality standards\n\nAhrefs MCP → keyword usage validation\n\nExisting published content for comparison",
+    outputs: "Quality score (0-100) with breakdown by category\n\nPass/fail decision for publishing gate\n\nSpecific improvement recommendations\n\nQuality trend reports across content categories and locales",
+    rules: ["Minimum quality score for publishing: 75/100", "Score categories: keyword optimisation, readability, brand voice, technical SEO, uniqueness, completeness", "Flag potential duplicate content or cannibalisation", "Consider locale-specific language quality standards", "Never override quality gate — even for urgent content"],
+    escalationTrigger: "Content fails quality gate for a priority page, or systematic quality decline detected across a content batch.",
+    escalationPayload: ["Quality score breakdown", "Specific failure points", "Brief compliance analysis", "Recommended improvements or rewrite"],
+    successMetric: "First-pass quality gate pass rate ≥80%. Published content maintains quality score >75. Zero quality-gate bypasses."
+  },
+  {
+    group: "SEO Execution",
+    name: "Internal & External Linkbuilder",
+    domain: "SEO Execution — SEO Agent Team",
+    owner: "SEO & GEO Domain Expert",
+    trustLevel: "L1",
+    agentType: "Claude Agent",
+    intent: "Execute internal and external link-building actions based on opportunities identified by the Link Opportunity Analyst, managing internal link placement in content and coordinating external outreach efforts.",
+    triggerCondition: "Triggered by SEO Brain with link-building instructions from Link Opportunity Analyst findings.",
+    frequency: "On-demand based on link-building queue. Weekly internal link audit and implementation cycle.",
+    maxTriggerWindow: "Business hours (06:00–22:00 CET).",
+    localeScope: "Global — internal linking across all locales. External link-building per market strategy.",
+    inputs: "Link Opportunity Analyst prospect lists and recommendations\n\nContentful → content for internal link placement\n\nAhrefs MCP → link validation and monitoring\n\nSEO Expert link strategy guidelines and approved anchor text patterns",
+    outputs: "Internal links placed in content via Contentful\n\nExternal outreach drafts and tracking\n\nLink acquisition reports\n\nInternal link structure improvements log",
+    rules: ["Internal links must be contextually relevant — no forced link stuffing", "Follow SEO Expert approved anchor text patterns", "External outreach follows Helloprint brand guidelines", "Never use paid link schemes or PBNs", "Validate all placed links post-deployment", "Max 3 internal links added per page per cycle to avoid over-optimisation"],
+    escalationTrigger: "External link opportunity requires partnership approval, or internal linking change would significantly alter page structure.",
+    escalationPayload: ["Link opportunity details", "Required approvals", "Impact assessment", "Recommended approach"],
+    successMetric: "Internal link implementation accuracy ≥98%. External link acquisition rate ≥15% of qualified prospects. Link-driven ranking improvements tracked monthly."
+  }
+];
 
 // ─── State ───
 let agents = [];
@@ -404,7 +911,7 @@ function renderSidebar() {
 function renderMain() {
   const area = document.getElementById('mainArea');
   if (!activeId || !agents.length) {
-    area.innerHTML = `<div class="empty-state"><h3>No agent selected</h3><p>Create or select an agent from the sidebar.</p></div>`;
+    area.innerHTML = `<div class="empty-state"><h3>No agent selected</h3><p>Create or select an agent from the sidebar.</p>${agents.length === 0 ? '<button class="btn btn-primary" onclick="loadDefaultAgents()" style="margin-top:16px;padding:12px 24px;font-size:14px">&#128640; Load 23 Default SEO Agents</button><p style="margin-top:8px;font-size:12px;color:var(--hp-text-light)">Pre-fills all agents from the SEO Strategy and pushes them to your Google Sheet.</p>' : ''}</div>`;
     return;
   }
   const a = agents.find(x => x.id === activeId);
@@ -548,6 +1055,38 @@ function changeGroup(g) {
 function createAgent() {
   const a = { id: crypto.randomUUID(), _group: 'Monitoring', name: 'New Agent', trustLevel: '', agentType: '', rules: ['','',''], escalationPayload: [''] };
   agents.push(a); activeId = a.id; scheduleSave(a); render();
+}
+
+async function loadDefaultAgents() {
+  if (agents.length > 0 && !confirm('This will replace all current agents with the 23 default SEO agents. Continue?')) return;
+  agents = DEFAULT_SEO_AGENTS.map(a => ({
+    id: crypto.randomUUID(),
+    _group: a.group,
+    name: a.name,
+    domain: a.domain,
+    owner: a.owner,
+    trustLevel: a.trustLevel,
+    agentType: a.agentType,
+    intent: a.intent,
+    triggerCondition: a.triggerCondition,
+    frequency: a.frequency,
+    maxTriggerWindow: a.maxTriggerWindow,
+    localeScope: a.localeScope,
+    inputs: a.inputs,
+    outputs: a.outputs,
+    rules: a.rules || [''],
+    escalationTrigger: a.escalationTrigger,
+    escalationPayload: a.escalationPayload || [''],
+    successMetric: a.successMetric
+  }));
+  activeId = agents[0].id;
+  saveLocal();
+  render();
+  toast('Loaded 23 SEO agents!');
+  // Push to Google Sheets if connected
+  if (isOnline && sheetsUrl) {
+    await pushAllToSheet();
+  }
 }
 
 function selectAgent(id) { activeId = id; render(); }
